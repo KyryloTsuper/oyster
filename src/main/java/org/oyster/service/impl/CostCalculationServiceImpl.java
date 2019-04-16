@@ -53,27 +53,27 @@ public class CostCalculationServiceImpl implements CostCalculationService {
     private double calculateFareByRule(ZoneTrip zoneTrip) {
         List<FairCalculationRule> calculationRules = new ArrayList<>();
         calculationRules.add(zT -> {
-            if (zoneTrip.getDistance() >= 2) {
+            if (zT.getDistance() >= 2) {
                 return MAX_FARE;
             }
             return null;
         });
         calculationRules.add(zT -> {
-            if (zoneTrip.getFrom() == 1 || zoneTrip.getTo() == 1) {
-                if (zoneTrip.getDistance() == 0) {
+            if (zT.getFrom() == 1 || zT.getTo() == 1) {
+                if (zT.getDistance() == 0) {
                     return IN_ZONE_ONE;
                 }
-                if (zoneTrip.getDistance() == 1) {
+                if (zT.getDistance() == 1) {
                     return TWO_ZONES_INCLUDING_ZONE_ONE;
                 }
             }
             return null;
         });
         calculationRules.add(zT -> {
-            if (zoneTrip.getDistance() == 0) {
+            if (zT.getDistance() == 0) {
                 return SINGLE_ZONE_OUTSIDE_ZONE_ONE;
             }
-            if (zoneTrip.getDistance() == 1) {
+            if (zT.getDistance() == 1) {
                 return TWO_ZONES_EXCLUDING_ZONE_ONE;
             }
             return null;

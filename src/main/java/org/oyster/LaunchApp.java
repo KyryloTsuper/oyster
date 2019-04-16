@@ -4,6 +4,7 @@ import org.oyster.entity.OysterCard;
 import org.oyster.entity.Station;
 import org.oyster.entity.TransportType;
 import org.oyster.service.TripManagementService;
+import org.oyster.service.impl.CostCalculationServiceImpl;
 import org.oyster.service.impl.TripManagementServiceImpl;
 
 import java.util.ArrayList;
@@ -24,7 +25,8 @@ public class LaunchApp {
         stationsDefault.add(new Station("Hammersmith", new HashSet<>(Collections.singletonList(2))));
     }
 
-    static TripManagementService tripManagementService = new TripManagementServiceImpl();
+    public static TripManagementService tripManagementService = new TripManagementServiceImpl();
+    public static CostCalculationServiceImpl costService = new CostCalculationServiceImpl();
 
     public static void main(String[] args) {
 
@@ -51,8 +53,20 @@ public class LaunchApp {
     }
 
     private static void runManualTrip(Scanner scanner) {
-        OysterCard card = new OysterCard(30.);
+        OysterCard card = new OysterCard(3.);
+        boolean success = true;
         while(true) {
+            if (!success) {
+                while(true) {
+                    System.out.println("You don't have enough money on your card. Please add some funds on it. Balance: " + card.getBalance());
+                    double addedFunds = scanner.nextDouble();
+                    if (card.getBalance() + addedFunds - costService.getMaxFare() >= 0) {
+                        card.addFunds(addedFunds);
+                        break;
+                    }
+                    card.addFunds(addedFunds);
+                }
+            }
             System.out.println("On which station you want to check in?");
             getStationsNames();
             String stationChosen = scanner.next();
@@ -77,14 +91,17 @@ public class LaunchApp {
                 }
                 if (transportType != null) break;
             }
-            tripManagementService.checkIn(transportType, card, startStation);
-            System.out.println("On which station you want to check out? Or you'll (f)orget to checkout?");
-            getStationsNames();
-            stationChosen = scanner.next();
-            if (!stationChosen.toLowerCase().equals("f")) {
-                Station endStation = getStationByChosenName(stationChosen);
-                tripManagementService.checkOut(card, endStation);
+            success = tripManagementService.checkIn(transportType, card, startStation);
+            if (success) {
+                System.out.println("On which station you want to check out? Or you'll (f)orget to checkout?");
+                getStationsNames();
+                stationChosen = scanner.next();
+                if (!stationChosen.toLowerCase().equals("f")) {
+                    Station endStation = getStationByChosenName(stationChosen);
+                    tripManagementService.checkOut(card, endStation);
+                }
             }
+
             System.out.println("Would you like to end the trip? (Y)es or (N)o?");
             String cont = scanner.next();
             if (cont.toLowerCase().equals("y")) break;

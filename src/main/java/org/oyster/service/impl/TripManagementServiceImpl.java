@@ -10,6 +10,8 @@ import java.text.DecimalFormat;
 
 public class TripManagementServiceImpl implements TripManagementService {
 
+    DecimalFormat numberFormat = new DecimalFormat("#.00");
+
     CostCalculationServiceImpl costService = new CostCalculationServiceImpl();
 
     public boolean checkIn(TransportType type, OysterCard card, Station from) {
@@ -18,9 +20,10 @@ public class TripManagementServiceImpl implements TripManagementService {
             Trip trip = new Trip(from, type);
             card.setTrip(trip);
             card.reduceFunds(initialCost);
-            System.out.println("Checked in on Station: " + from.getName() + ". Type: " + card.getTrip().getTransport() + ". Reduced funds: -" + initialCost + ". Balance: " + card.getBalance());
+            System.out.println("Checked in on Station: " + from.getName() + ". Type: " + card.getTrip().getTransport() + ". Reduced funds: -" + numberFormat.format(initialCost) + ". Balance: " + numberFormat.format(card.getBalance()));
             return true;
         }
+        System.out.println("Not enough money to make a check in. Please add some funds on your card.");
         return false;
     }
 
@@ -31,7 +34,6 @@ public class TripManagementServiceImpl implements TripManagementService {
         }
         double compensation = costService.getMaxFare() - actualCost;
         card.addFunds(compensation);
-        DecimalFormat numberFormat = new DecimalFormat("#.00");
-        System.out.println("Checked out on Station: " + to.getName() + ". Compensation: " + numberFormat.format(compensation) + ". Balance: " + card.getBalance());
+        System.out.println("Checked out on Station: " + to.getName() + ". Compensation: " + numberFormat.format(compensation) + ". Balance: " + numberFormat.format(card.getBalance()));
     }
 }
