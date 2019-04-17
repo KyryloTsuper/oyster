@@ -2,14 +2,9 @@ package org.oyster.service.impl;
 
 import org.oyster.entity.Station;
 import org.oyster.entity.TransportType;
+import org.oyster.entity.RuleWithCost;
 import org.oyster.service.CostCalculationService;
-import org.oyster.entity.rules.FairCalculationRule;
 import org.oyster.entity.ZoneTrip;
-import org.oyster.entity.rules.impl.SingleZoneWithoutZoneOneRule;
-import org.oyster.entity.rules.impl.ThreeZonesRule;
-import org.oyster.entity.rules.impl.TwoZonesWithZoneOneRule;
-import org.oyster.entity.rules.impl.TwoZonesWithoutZoneOneRule;
-import org.oyster.entity.rules.impl.ZoneOneRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +20,16 @@ public class CostCalculationServiceImpl implements CostCalculationService {
 
     public static final double BUS_FARE = 1.8;
 
-    private static List<FairCalculationRule> zoneRules = new ArrayList<>();
+    private static List<RuleWithCost> rulesWithCosts = new ArrayList<>();
 
     static {
-        zoneRules.add(new ZoneOneRule());
-        zoneRules.add(new TwoZonesWithZoneOneRule());
-        zoneRules.add(new TwoZonesWithoutZoneOneRule());
-        zoneRules.add(new SingleZoneWithoutZoneOneRule());
-        zoneRules.add(new ThreeZonesRule());
+        rulesWithCosts.add(new RuleWithCost(zt -> zt.hasZone(1) && (zt.getDistance() == 0), IN_ZONE_ONE));
+        rulesWithCosts.add(new RuleWithCost(zt -> zt.hasZone(1) && (zt.getDistance() == 1), TWO_ZONES_INCLUDING_ZONE_ONE));
+        rulesWithCosts.add(new RuleWithCost(zt -> !zt.hasZone(1) && (zt.getDistance() == 1), TWO_ZONES_EXCLUDING_ZONE_ONE));
+        rulesWithCosts.add(new RuleWithCost(zt -> zt.getDistance() >= 2, MAX_FARE));
+        rulesWithCosts.add(new RuleWithCost(zt -> !zt.hasZone(1) && (zt.getDistance() == 0), SINGLE_ZONE_OUTSIDE_ZONE_ONE));
     }
+
 
     @Override
     public double calculateTripCost(Station from, Station to) {
@@ -66,11 +62,11 @@ public class CostCalculationServiceImpl implements CostCalculationService {
     }
 
     private double calculateFareByRule(ZoneTrip zoneTrip) {
-        FairCalculationRule rule = zoneRules.stream()
-                .filter(z -> z.check(zoneTrip))
+        return rulesWithCosts.stream()
+                .filter(ruleWithCost -> ruleWithCost.getRule().test(zoneTrip))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Station zones did not match any of zone rules"));
-        return rule.getResult();
+                .orElseThrow(() -> new IllegalArgumentException("Station zones did not match any of zone rules"))
+                .getCost();
     }
 
     public static double getMaxFare() {
