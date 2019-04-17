@@ -121,9 +121,22 @@ public class LaunchApp {
                 }
             }
 
-            System.out.println("Would you like to end the trip? (Y)es or (N)o?");
-            String cont = scanner.next();
-            if (cont.toLowerCase().equals("y")) break;
+            String cont;
+            while (true) {
+                System.out.println("Would you like to continue the trip? (Y)es or (N)o?");
+                cont = scanner.next();
+                switch (cont.toLowerCase()) {
+                    case "y":
+                    case "n":
+                        break;
+                    default:
+                        System.out.println("Wrong input.");
+                }
+                if (cont.toLowerCase().equals("y") || cont.toLowerCase().equals("n")) {
+                    break;
+                }
+            }
+            if (cont.toLowerCase().equals("n")) break;
         }
     }
 

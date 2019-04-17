@@ -67,7 +67,7 @@ public class CostCalculationServiceImpl implements CostCalculationService {
 
     private double calculateFareByRule(ZoneTrip zoneTrip) {
         FairCalculationRule rule = zoneRules.stream()
-                .filter(z -> z.calculate(zoneTrip))
+                .filter(z -> z.check(zoneTrip))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Station zones did not match any of zone rules"));
         return rule.getResult();

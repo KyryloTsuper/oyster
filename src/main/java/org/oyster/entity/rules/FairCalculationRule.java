@@ -4,6 +4,6 @@ import org.oyster.entity.ZoneTrip;
 
 public interface FairCalculationRule {
 
-    boolean calculate(ZoneTrip zoneTrip);
+    boolean check(ZoneTrip zoneTrip);
     Double getResult();
 }

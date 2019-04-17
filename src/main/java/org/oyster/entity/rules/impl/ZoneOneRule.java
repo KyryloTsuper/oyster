@@ -7,7 +7,7 @@ import org.oyster.entity.ZoneTrip;
 public class ZoneOneRule implements FairCalculationRule {
 
     @Override
-    public boolean calculate(ZoneTrip zoneTrip) {
+    public boolean check(ZoneTrip zoneTrip) {
         return zoneTrip.hasZone(1) && (zoneTrip.getDistance() == 0);
     }
 
