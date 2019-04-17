@@ -10,7 +10,7 @@ import java.text.DecimalFormat;
 
 public class TripManagementServiceImpl implements TripManagementService {
 
-    DecimalFormat numberFormat = new DecimalFormat("#.00");
+    DecimalFormat numberFormat = new DecimalFormat("#0.00");
 
     CostCalculationServiceImpl costService = new CostCalculationServiceImpl();
 
@@ -28,12 +28,13 @@ public class TripManagementServiceImpl implements TripManagementService {
     }
 
     public void checkOut(OysterCard card, Station to) {
-        double actualCost = costService.getMaxFare();
+        double actualCost;
+        double compensation = 0;
         if (card.getTrip().getTransport() == TransportType.TUBE) {
             actualCost = costService.calculateTripCost(card.getTrip().getFrom(), to);
+            compensation = CostCalculationServiceImpl.getMaxFare() - actualCost;
+            card.addFunds(compensation);
         }
-        double compensation = costService.getMaxFare() - actualCost;
-        card.addFunds(compensation);
         System.out.println("Checked out on Station: " + to.getName() + ". Compensation: " + numberFormat.format(compensation) + ". Balance: " + numberFormat.format(card.getBalance()));
     }
 }

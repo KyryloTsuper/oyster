@@ -7,10 +7,12 @@ import org.oyster.service.TripManagementService;
 import org.oyster.service.impl.CostCalculationServiceImpl;
 import org.oyster.service.impl.TripManagementServiceImpl;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -26,7 +28,8 @@ public class LaunchApp {
     }
 
     public static TripManagementService tripManagementService = new TripManagementServiceImpl();
-    public static CostCalculationServiceImpl costService = new CostCalculationServiceImpl();
+
+    private static DecimalFormat numberFormat = new DecimalFormat("#0.00");
 
     public static void main(String[] args) {
 
@@ -35,14 +38,14 @@ public class LaunchApp {
             System.out.println();
             System.out.println("(T)est scenario or (M)anual trip? (B)reak.");
             String tripType = in.next();
-            switch (tripType) {
-                case "T":
+            switch (tripType.toLowerCase()) {
                 case "t":
                     runTestScenario();
                     break;
-                case "M":
                 case "m":
                     runManualTrip(in);
+                    break;
+                case "b":
                     break;
                 default:
                     System.out.println("You've mistyped. Try again.");
@@ -53,35 +56,51 @@ public class LaunchApp {
     }
 
     private static void runManualTrip(Scanner scanner) {
-        OysterCard card = new OysterCard(3.);
+        OysterCard card = new OysterCard(1.7);
+        System.out.println("Your balance: " + numberFormat.format(card.getBalance()));
         boolean success = true;
         while(true) {
             if (!success) {
                 while(true) {
-                    System.out.println("You don't have enough money on your card. Please add some funds on it. Balance: " + card.getBalance());
-                    double addedFunds = scanner.nextDouble();
-                    if (card.getBalance() + addedFunds - costService.getMaxFare() >= 0) {
-                        card.addFunds(addedFunds);
-                        break;
+                    double addedFunds;
+                    System.out.println("You don't have enough money on your card. Please add some funds on it. Balance: " + numberFormat.format(card.getBalance()));
+                    try {
+                        addedFunds = scanner.nextDouble();
+                    } catch (InputMismatchException e) {
+                        scanner.nextLine();
+                        System.out.println("Wrong input.");
+                        addedFunds = -1;
                     }
-                    card.addFunds(addedFunds);
+                    if (addedFunds > 0) {
+                        if (card.getBalance() + addedFunds - CostCalculationServiceImpl.getMaxFare() >= 0) {
+                            card.addFunds(addedFunds);
+                            break;
+                        }
+                        card.addFunds(addedFunds);
+                    }
+                    System.out.println("Please enter a positive digit.");
                 }
             }
-            System.out.println("On which station you want to check in?");
-            getStationsNames();
-            String stationChosen = scanner.next();
-            Station startStation = getStationByChosenName(stationChosen);
+            Station startStation;
+            String stationChosen;
+            while(true) {
+                System.out.println("On which station you want to check in?");
+                getStationsNames();
+                stationChosen = scanner.next();
+                startStation = getStationByChosenName(stationChosen);
+                if (startStation != null) break;
+
+                System.out.println("Station wasn't found, please enter correct station.");
+            }
             TransportType transportType = null;
             while(true) {
                 System.out.println("What type of transport? (T)ube or (B)us?");
                 String transport = scanner.next();
 
-                switch (transport) {
-                    case "T":
+                switch (transport.toLowerCase()) {
                     case "t":
                         transportType = TransportType.TUBE;
                         break;
-                    case "B":
                     case "b":
                         transportType = TransportType.BUS;
                         break;
@@ -110,17 +129,13 @@ public class LaunchApp {
 
     private static Station getStationByChosenName(String stationChosen) {
 
-        switch (stationChosen) {
-            case "H":
+        switch (stationChosen.toLowerCase()) {
             case "h":
                 return stationsDefault.get(0);
-            case "E":
             case "e":
                 return stationsDefault.get(1);
-            case "W":
             case "w":
                 return stationsDefault.get(2);
-            case "A":
             case "a":
                 return stationsDefault.get(3);
             default:

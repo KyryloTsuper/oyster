@@ -3,8 +3,13 @@ package org.oyster.service.impl;
 import org.oyster.entity.Station;
 import org.oyster.entity.TransportType;
 import org.oyster.service.CostCalculationService;
-import org.oyster.utils.FairCalculationRule;
-import org.oyster.utils.ZoneTrip;
+import org.oyster.entity.rules.FairCalculationRule;
+import org.oyster.entity.ZoneTrip;
+import org.oyster.entity.rules.impl.SingleZoneWithoutZoneOneRule;
+import org.oyster.entity.rules.impl.ThreeZonesRule;
+import org.oyster.entity.rules.impl.TwoZonesWithZoneOneRule;
+import org.oyster.entity.rules.impl.TwoZonesWithoutZoneOneRule;
+import org.oyster.entity.rules.impl.ZoneOneRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +24,16 @@ public class CostCalculationServiceImpl implements CostCalculationService {
     public static final double TWO_ZONES_EXCLUDING_ZONE_ONE = 2.25;
 
     public static final double BUS_FARE = 1.8;
+
+    private static List<FairCalculationRule> zoneRules = new ArrayList<>();
+
+    static {
+        zoneRules.add(new ZoneOneRule());
+        zoneRules.add(new TwoZonesWithZoneOneRule());
+        zoneRules.add(new TwoZonesWithoutZoneOneRule());
+        zoneRules.add(new SingleZoneWithoutZoneOneRule());
+        zoneRules.add(new ThreeZonesRule());
+    }
 
     @Override
     public double calculateTripCost(Station from, Station to) {
@@ -51,45 +66,14 @@ public class CostCalculationServiceImpl implements CostCalculationService {
     }
 
     private double calculateFareByRule(ZoneTrip zoneTrip) {
-        List<FairCalculationRule> calculationRules = new ArrayList<>();
-        calculationRules.add(zT -> {
-            if (zT.getDistance() >= 2) {
-                return MAX_FARE;
-            }
-            return null;
-        });
-        calculationRules.add(zT -> {
-            if (zT.getFrom() == 1 || zT.getTo() == 1) {
-                if (zT.getDistance() == 0) {
-                    return IN_ZONE_ONE;
-                }
-                if (zT.getDistance() == 1) {
-                    return TWO_ZONES_INCLUDING_ZONE_ONE;
-                }
-            }
-            return null;
-        });
-        calculationRules.add(zT -> {
-            if (zT.getDistance() == 0) {
-                return SINGLE_ZONE_OUTSIDE_ZONE_ONE;
-            }
-            if (zT.getDistance() == 1) {
-                return TWO_ZONES_EXCLUDING_ZONE_ONE;
-            }
-            return null;
-        });
-
-        Double resultFare;
-        for (FairCalculationRule fairCalculationRule : calculationRules) {
-            resultFare = fairCalculationRule.calculate(zoneTrip);
-            if (resultFare != null) {
-                return resultFare;
-            }
-        }
-        throw new IllegalArgumentException("Station zones did not match any of zone rules");
+        FairCalculationRule rule = zoneRules.stream()
+                .filter(z -> z.calculate(zoneTrip))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Station zones did not match any of zone rules"));
+        return rule.getResult();
     }
 
-    public double getMaxFare() {
+    public static double getMaxFare() {
         return MAX_FARE;
     }
 
@@ -97,23 +81,23 @@ public class CostCalculationServiceImpl implements CostCalculationService {
         return type == TransportType.BUS ? BUS_FARE : MAX_FARE;
     }
 
-    public double getInZoneOne() {
+    public static double getInZoneOne() {
         return IN_ZONE_ONE;
     }
 
-    public double getSingleZoneOutsideZoneOne() {
+    public static double getSingleZoneOutsideZoneOne() {
         return SINGLE_ZONE_OUTSIDE_ZONE_ONE;
     }
 
-    public double getTwoZonesIncludingZoneOne() {
+    public static double getTwoZonesIncludingZoneOne() {
         return TWO_ZONES_INCLUDING_ZONE_ONE;
     }
 
-    public double getTwoZonesExcludingZoneOne() {
+    public static double getTwoZonesExcludingZoneOne() {
         return TWO_ZONES_EXCLUDING_ZONE_ONE;
     }
 
-    public double getBusFare() {
+    public static double getBusFare() {
         return BUS_FARE;
     }
 }

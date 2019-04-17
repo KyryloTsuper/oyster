@@ -1,4 +1,4 @@
-package org.oyster.utils;
+package org.oyster.entity;
 
 public class ZoneTrip {
     private Integer from;
@@ -27,5 +27,9 @@ public class ZoneTrip {
 
     public int getDistance() {
         return Math.abs(from - to);
+    }
+
+    public boolean hasZone(Integer zone) {
+        return from.equals(zone) || to.equals(zone);
     }
 }
